@@ -1,8 +1,11 @@
 import React from 'react';
+import {loadFont as loadOswald} from '@remotion/google-fonts/Oswald';
 import {
   AbsoluteFill, Composition, Sequence, useCurrentFrame, useVideoConfig,
   interpolate, spring, Easing
 } from 'remotion';
+
+const {fontFamily:OSWALD} = loadOswald();
 
 const C = {
   bg: '#030303', panel: '#101113', panelSoft: '#0b0c0e',
@@ -12,7 +15,7 @@ const C = {
 };
 const CLAMP = {extrapolateLeft: 'clamp' as const, extrapolateRight: 'clamp' as const};
 const OUT = Easing.bezier(0.16, 1, 0.3, 1);
-const TITLE_FONT = '"Arial Narrow", "Roboto Condensed", "Liberation Sans Narrow", Arial, sans-serif';
+const TITLE_FONT = OSWALD;
 const UI_FONT = 'Inter, "Helvetica Neue", Arial, sans-serif';
 
 function Reveal({children, delay=0, y=16, duration=14, style={}}:{
@@ -21,9 +24,18 @@ function Reveal({children, delay=0, y=16, duration=14, style={}}:{
 }) {
   const f = useCurrentFrame();
   const {fps} = useVideoConfig();
-  const progress = spring({frame:f-delay, fps, config:{damping:20, stiffness:110, mass:.7}});
+  const progress = spring({frame:f-delay, fps, config:{damping:19, stiffness:118, mass:.72}});
   const opacity = interpolate(f, [delay, delay+duration], [0,1], CLAMP);
-  return <div style={{opacity, transform:'translate3d(0,'+interpolate(progress,[0,1],[y,0])+'px,0)', ...style}}>{children}</div>;
+  const blur = interpolate(progress,[0,1],[7,0]);
+  const scale = interpolate(progress,[0,1],[.976,1]);
+  return <div style={{
+    opacity,
+    filter:'blur('+blur+'px)',
+    transform:'translate3d(0,'+interpolate(progress,[0,1],[y,0])+'px,0) scale('+scale+')',
+    transformOrigin:'center center',
+    willChange:'transform,opacity,filter',
+    ...style
+  }}>{children}</div>;
 }
 
 function Background({accent=C.purple}:{accent?:string}) {
@@ -39,18 +51,34 @@ function Background({accent=C.purple}:{accent?:string}) {
   </AbsoluteFill>;
 }
 
+function LightSweep({accent}:{accent:string}) {
+  const f=useCurrentFrame();
+  const left=interpolate(f,[3,76],[-42,142],CLAMP);
+  const opacity=interpolate(f,[2,16,64,83],[0,.78,.52,0],CLAMP);
+  return <div style={{
+    position:'absolute',top:178,bottom:145,left:left+'%',width:'22%',
+    transform:'skewX(-17deg)',
+    background:'linear-gradient(90deg,transparent 0%,'+accent+'07 24%,'+accent+'13 50%,'+accent+'05 72%,transparent 100%)',
+    filter:'blur(15px)',opacity,pointerEvents:'none'
+  }}/>;
+}
+
 function SceneBase({index, accent=C.purple, children}:{
   index:number; accent?:string; children:React.ReactNode;
 }) {
   const f=useCurrentFrame();
   const {durationInFrames}=useVideoConfig();
-  const fadeIn=interpolate(f,[0,10],[0,1],CLAMP);
+  const fadeIn=interpolate(f,[0,9],[0,1],CLAMP);
   const fadeOut=interpolate(f,[durationInFrames-10,durationInFrames-1],[1,0],CLAMP);
   const opacity=Math.min(fadeIn,fadeOut);
-  return <AbsoluteFill style={{opacity, color:C.white, fontFamily:UI_FONT, background:C.bg}}>
+  const scale=interpolate(f,[0,durationInFrames-1],[1.018,1.0],CLAMP);
+  const footerProgress=interpolate(f,[7,32],[0,1],CLAMP);
+  return <AbsoluteFill style={{opacity,transform:'scale('+scale+')',transformOrigin:'center center',color:C.white,fontFamily:UI_FONT,background:C.bg}}>
     <Background accent={accent}/>
+    <LightSweep accent={accent}/>
     <div style={{position:'absolute',left:78,top:65,fontFamily:'ui-monospace,monospace',fontSize:12,letterSpacing:3,color:'#7e6bb1',fontWeight:600}}>{String(index).padStart(2,'0')} <span style={{color:'#37323f'}}>/ 12</span></div>
     <div style={{position:'absolute',right:78,top:65,fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:3,color:'#55535d'}}>ZYNTRIX OS / ZETTINGS</div>
+    <div style={{position:'absolute',left:78,top:100,width:Math.max(0,footerProgress*118),height:2,background:accent,boxShadow:'0 0 12px '+accent+'80'}}/>
     {children}
     <div style={{position:'absolute',left:78,right:78,bottom:64,display:'flex',justifyContent:'space-between',alignItems:'center',fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:2,color:'#4f4d55'}}>
       <span>SYSTEM SETTINGS, RECONSIDERED.</span><span style={{color:accent+'99'}}>Z / ZETTINGS</span>
@@ -69,7 +97,25 @@ function Headline({line1,line2,accent=C.purple,eyebrow,top=286,size=67}:{
 }
 
 function Glyph({children,color=C.purple,size=22}:{children:React.ReactNode;color?:string;size?:number}) {
- return <div style={{width:50,height:50,borderRadius:13,background:color+'19',border:'1px solid '+color+'20',display:'grid',placeItems:'center',color,fontSize:size,fontWeight:700,flexShrink:0}}>{children}</div>;
+  const key=String(children);
+  const art:Record<string,React.ReactNode>={
+    '⌁':<><path d="M3.5 8.5a12.4 12.4 0 0 1 17 0"/><path d="M6.7 12a7.7 7.7 0 0 1 10.6 0"/><path d="M9.9 15.5a3.1 3.1 0 0 1 4.2 0"/><circle cx="12" cy="19" r="1" fill="currentColor" stroke="none"/></>,
+    'ᛒ':<><path d="M12 2.5v19l6-5-6-4.5 6-4.5-6-5Z"/><path d="m5 7 13 10M5 17 18 7"/></>,
+    '◐':<><path d="M19.5 14.2A8 8 0 0 1 9.8 4.5a8 8 0 1 0 9.7 9.7Z"/><path d="M16 3.5v4M14 5.5h4"/></>,
+    '▤':<><rect x="4" y="3.5" width="16" height="17" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></>,
+    '◉':<><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3.2"/></>,
+    '●':<><circle cx="12" cy="8" r="3.2"/><path d="M5 20c.3-3.5 2.8-5.5 7-5.5s6.7 2 7 5.5"/></>,
+    '⌑':<><path d="M12 3 20 7.5v9L12 21l-8-4.5v-9L12 3Z"/><path d="m8.5 12 2.3 2.3 4.7-5"/></>,
+    '▣':<><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M8 8h8v8H8z"/></>,
+    '↻':<><path d="M20 7v5h-5"/><path d="M19 12a7.5 7.5 0 1 0 1 4"/></>,
+    '⌘':<><rect x="8" y="2.5" width="8" height="8" rx="3"/><rect x="8" y="13.5" width="8" height="8" rx="3"/><rect x="2.5" y="8" width="8" height="8" rx="3"/><rect x="13.5" y="8" width="8" height="8" rx="3"/></>,
+    '⌕':<><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></>,
+    '☾':<><path d="M19.5 14.2A8 8 0 0 1 9.8 4.5a8 8 0 1 0 9.7 9.7Z"/></>,
+    '☼':<><circle cx="12" cy="12" r="4"/><path d="M12 2v2.3M12 19.7V22M4.9 4.9l1.6 1.6m11 11 1.6 1.6M2 12h2.3m15.4 0H22M4.9 19.1l1.6-1.6m11-11 1.6-1.6"/></>
+  };
+  return <div style={{width:50,height:50,borderRadius:13,background:color+'19',border:'1px solid '+color+'25',display:'grid',placeItems:'center',color,flexShrink:0}}>
+    <svg width={size+5} height={size+5} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.65" strokeLinecap="round" strokeLinejoin="round">{art[key]||<text x="12" y="16" textAnchor="middle" fill="currentColor" stroke="none" fontSize="13">{key}</text>}</svg>
+  </div>;
 }
 
 function Switch({on=true,color=C.blue}:{on?:boolean;color?:string}) {
@@ -83,7 +129,17 @@ function Switch({on=true,color=C.blue}:{on?:boolean;color?:string}) {
 }
 
 function SettingRow({icon,title,detail,color=C.blue,on=true,tag}:{icon:string;title:string;detail:string;color?:string;on?:boolean;tag?:string}) {
-  return <div style={{width:875,height:126,border:'1px solid '+color+'66',borderRadius:18,boxSizing:'border-box',background:'linear-gradient(105deg,#121316,#0b0b0d)',boxShadow:'0 0 42px '+color+'18,inset 0 1px #ffffff08',display:'flex',alignItems:'center',padding:'0 36px',gap:24}}>
+  const f=useCurrentFrame();
+  const breathe=.5+.5*Math.sin(f/8.5);
+  const entering=interpolate(f,[3,22],[0,1],CLAMP);
+  return <div style={{
+    width:875,height:126,border:'1px solid '+color+'88',borderRadius:16,boxSizing:'border-box',
+    background:'linear-gradient(105deg,#141518,#09090b)',
+    boxShadow:'0 0 '+(27+breathe*15)+'px '+color+(Math.round(12+breathe*11).toString(16))+',inset 0 1px #ffffff0a',
+    display:'flex',alignItems:'center',padding:'0 36px',gap:24,
+    transform:'translateY('+interpolate(entering,[0,1],[8,0])+'px)',
+    opacity:entering
+  }}>
     <Glyph color={color} size={23}>{icon}</Glyph>
     <div style={{flex:1,textAlign:'left'}}>
       <div style={{fontSize:22,fontWeight:650,letterSpacing:-.5,color:'#f4f4f8'}}>{title}</div>
@@ -174,10 +230,12 @@ function S6(){const labels=[['◈','System'],['⌁','Network'],['ᛒ','Bluetooth
  </SceneBase>}
 
 function S7(){const f=useCurrentFrame();const w=interpolate(f,[12,42],[0,100],CLAMP);
+ const words=['','n','ni','nig','nigh','night'];const typed=words[Math.min(words.length-1,Math.floor(Math.max(0,f-5)/3))];
+ const match=interpolate(f,[18,33],[0,1],CLAMP);
  return <SceneBase index={7} accent={C.amber}>
  <Headline line1="FIND IT INSTANTLY." accent={C.amber} eyebrow="TYPE · MATCH · GO" top={260} size={65}/>
- <div style={{position:'absolute',left:0,right:0,top:452,display:'flex',justifyContent:'center'}}><Reveal y={18}><div style={{width:660,height:55,border:'1px solid #3a3730',borderRadius:13,background:'#101113',display:'flex',alignItems:'center',padding:'0 19px',boxSizing:'border-box',gap:13,boxShadow:'0 0 25px #ffbd310a'}}><span style={{fontSize:20,color:'#817c71'}}>⌕</span><span style={{fontSize:17,color:C.white,letterSpacing:.1}}>night</span><span style={{width:2,height:20,background:C.amber,opacity:Math.sin(f/3)>0?1:0}}/><span style={{marginLeft:'auto',fontFamily:'ui-monospace,monospace',fontSize:9,letterSpacing:2,color:'#6c675d'}}>SEARCH SETTINGS</span></div></Reveal></div>
- <div style={{position:'absolute',top:523,left:0,right:0,display:'flex',justifyContent:'center'}}><Reveal delay={7} y={14}><div style={{width:660,height:84,border:'1px solid #ffbd315d',borderRadius:14,background:'#101113',boxSizing:'border-box',padding:'0 23px',display:'flex',alignItems:'center',gap:17,boxShadow:'0 0 38px #ffbd3114'}}><Glyph color={C.amber} size={20}>☾</Glyph><div style={{flex:1,textAlign:'left'}}><div style={{fontSize:16,fontWeight:650}}>Night light</div><div style={{fontSize:11,color:C.muted,marginTop:6}}>Warmer display after dark</div></div><span style={{fontFamily:'ui-monospace,monospace',fontSize:10,color:C.amber,letterSpacing:2}}>MATCH FOUND</span><div style={{width:26,height:26,borderRadius:20,background:C.amber,color:'#1b1404',display:'grid',placeItems:'center',fontSize:17}}>✓</div></div></Reveal></div>
+ <div style={{position:'absolute',left:0,right:0,top:452,display:'flex',justifyContent:'center'}}><Reveal y={18}><div style={{width:660,height:55,border:'1px solid #3a3730',borderRadius:13,background:'#101113',display:'flex',alignItems:'center',padding:'0 19px',boxSizing:'border-box',gap:13,boxShadow:'0 0 25px #ffbd310a'}}><Glyph color={C.amber} size={19}>⌕</Glyph><span style={{fontSize:17,color:C.white,letterSpacing:.1,minWidth:70,textAlign:'left'}}>{typed}</span><span style={{width:2,height:20,background:C.amber,opacity:Math.sin(f/3)>0?1:0}}/><span style={{marginLeft:'auto',fontFamily:'ui-monospace,monospace',fontSize:9,letterSpacing:2,color:'#6c675d'}}>SEARCH SETTINGS</span></div></Reveal></div>
+ <div style={{position:'absolute',top:523,left:0,right:0,display:'flex',justifyContent:'center',opacity:match}}><Reveal delay={7} y={14}><div style={{width:660,height:84,border:'1px solid #ffbd315d',borderRadius:14,background:'#101113',boxSizing:'border-box',padding:'0 23px',display:'flex',alignItems:'center',gap:17,boxShadow:'0 0 38px #ffbd3114'}}><Glyph color={C.amber} size={20}>☾</Glyph><div style={{flex:1,textAlign:'left'}}><div style={{fontSize:16,fontWeight:650}}>Night light</div><div style={{fontSize:11,color:C.muted,marginTop:6}}>Warmer display after dark</div></div><span style={{fontFamily:'ui-monospace,monospace',fontSize:10,color:C.amber,letterSpacing:2}}>MATCH FOUND</span><div style={{width:26,height:26,borderRadius:20,background:C.amber,color:'#1b1404',display:'grid',placeItems:'center',fontSize:17}}>✓</div></div></Reveal></div>
  <div style={{position:'absolute',top:636,left:'50%',width:660,height:2,background:'#ffbd3129',transform:'translateX(-50%)'}}><div style={{height:2,width:w+'%',background:C.amber,boxShadow:'0 0 9px '+C.amber}}/></div>
  </SceneBase>}
 
@@ -199,10 +257,10 @@ function S9(){const f=useCurrentFrame();const selected=Math.min(2,Math.floor(Mat
  </SceneBase>}
 
 function S10(){const f=useCurrentFrame();const swatches=[C.blue,C.purple,C.green,C.coral,C.amber,'#e2e3e7','#00d7c1','#fa65b4'];
- const chosen=3;
+ const chosen=f<21?0:f<35?1:3;
  return <SceneBase index={10} accent={C.coral}>
  <Headline line1="MAKE IT YOURS." accent={C.purple} eyebrow="7 ACCENT SEEDS · ONE TAP" top={285} size={65}/>
- <div style={{position:'absolute',top:482,left:0,right:0,display:'flex',justifyContent:'center',alignItems:'center',gap:20}}>{swatches.map((color,i)=><Reveal key={color} delay={i*2} y={12}><div style={{width:31,height:31,borderRadius:30,background:color,border:i===chosen?'3px solid #fff':'2px solid #242329',boxSizing:'border-box',boxShadow:i===chosen?'0 0 23px '+color+'70':'0 2px 6px #000'}}/></Reveal>)}</div>
+ <div style={{position:'absolute',top:482,left:0,right:0,display:'flex',justifyContent:'center',alignItems:'center',gap:20}}>{swatches.map((color,i)=><Reveal key={color} delay={i*2} y={12}><div style={{width:31,height:31,borderRadius:30,background:color,border:i===chosen?'3px solid #fff':'2px solid #242329',boxSizing:'border-box',boxShadow:i===chosen?'0 0 25px '+color+'90,0 0 50px '+color+'30':'0 2px 6px #000',transform:i===chosen?'scale(1.16)':'scale(1)'}}/></Reveal>)}</div>
  <Reveal delay={22} y={9}><div style={{position:'absolute',top:560,left:'50%',transform:'translateX(-50%)',height:42,padding:'0 27px',border:'1px solid #ff654f7a',borderRadius:24,background:'#ff654f16',display:'flex',alignItems:'center',fontSize:11,fontWeight:700,letterSpacing:3,color:C.coral,boxShadow:'0 0 28px #ff654f12',whiteSpace:'nowrap'}}>SUNSET CORAL</div></Reveal>
  <div style={{position:'absolute',top:657,left:0,right:0,textAlign:'center'}}><Reveal delay={27}><div style={{fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:3,color:'#75606a'}}>YOUR PALETTE. YOUR SYSTEM.</div></Reveal></div>
  </SceneBase>}
