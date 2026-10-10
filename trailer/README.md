@@ -1,16 +1,26 @@
-# Zyntrix OS cinematic trailer
+# Zettings Film v9, Remotion source
 
-A 45-second, 1920×1080, 30 fps Remotion motion-graphics trailer for the Zyntrix ecosystem. It uses a restrained midnight-blue palette, animated technical grid, glass surfaces, system-settings mockups, and a bespoke synthesised score.
+A 45-second, 1920×1080, 30 fps motion-graphics product film inspired by `ZETTINGS_FILM_v6_FINAL.mp4`.
 
-## Render locally
+## What this cut is built around
+
+- Near-black frame, fine chapter marker (`01 / 06`), condensed headline typography and restrained per-feature color.
+- Feature beats: Wi-Fi, paired-device battery, Do Not Disturb, quick settings, ten categories, instant search, brightness, Light/Dark/OLED, accent colors and Night Light.
+- A dedicated **BUTTERY SMOOTH · SPRING PHYSICS** hero shot with animated toggle and slider.
+- A drawn-on, filled-gradient Z mark with moving color points, converging rays, then **ZETTINGS / FEEL EVERY SETTING.**
+- The supplied reference film's soundtrack, retimed gently to the 45-second export.
+
+## Render
+
+Requires Node.js, FFmpeg and a network connection to fetch the reference audio track.
 
 ```bash
 npm install
 npm run render
 ```
 
-The MP4 is written to `out/zyntrix-trailer.mp4`.
+The finished MP4 is written to `out/zettings-film-v9-peak.mp4`.
 
 ## GitHub Actions
 
-The `Render Zyntrix trailer` workflow runs on changes to this directory and can also be started manually from the Actions tab. The rendered MP4 is uploaded as the `zyntrix-os-cinematic-trailer` artifact.
+The **Render Zyntrix trailer** workflow renders the same composition and uploads the finished MP4 as the `zettings-film-v9-peak` artifact.
