@@ -1,0 +1,20 @@
+{
+  "name": "zyntrix-trailer",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "render": "remotion render src/index.ts Trailer out/zyntrix-trailer.mp4",
+    "studio": "remotion studio src/index.ts"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.302",
+    "@remotion/google-fonts": "4.0.302",
+    "remotion": "4.0.302",
+    "react": "19.1.0",
+    "react-dom": "19.1.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.1.8",
+    "typescript": "5.8.3"
+  }
+}
