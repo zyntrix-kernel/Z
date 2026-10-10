@@ -28,13 +28,21 @@ jobs:
       - name: Install dependencies
         working-directory: trailer
         run: npm install --no-audit --no-fund
-      - name: Render 45-second 1080p trailer
+      - name: Render 45-second 1080p animation
         working-directory: trailer
-        run: npx remotion render src/index.ts Trailer out/zyntrix-os-trailer.mp4 --codec h264 --crf 18
+        run: npx remotion render src/index.ts Trailer out/raw.mp4 --codec h264 --crf 18 --concurrency 2
+      - name: Compose original soundtrack
+        working-directory: trailer
+        run: |
+          python3 scripts/make_score.py
+          ffmpeg -y -hide_banner -loglevel error -i out/raw.mp4 -i out/score.wav -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart out/zyntrix-os-cinematic-trailer.mp4
+      - name: Verify duration and streams
+        working-directory: trailer
+        run: ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate -of json out/zyntrix-os-cinematic-trailer.mp4
       - name: Upload finished MP4
         uses: actions/upload-artifact@v4
         with:
           name: zyntrix-os-cinematic-trailer
-          path: trailer/out/zyntrix-os-trailer.mp4
+          path: trailer/out/zyntrix-os-cinematic-trailer.mp4
           if-no-files-found: error
           retention-days: 14
