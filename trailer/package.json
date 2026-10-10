@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "render": "remotion render src/index.ts Trailer out/zyntrix-trailer.mp4",
+    "render": "remotion render src/index.ts Trailer out/raw.mp4 --codec h264 --crf 18 && python3 scripts/make_score.py && ffmpeg -y -i out/raw.mp4 -i out/score.wav -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart out/zyntrix-trailer.mp4",
     "studio": "remotion studio src/index.ts"
   },
   "dependencies": {
