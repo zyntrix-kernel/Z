@@ -1,0 +1,40 @@
+name: Render Zyntrix trailer
+
+on:
+  push:
+    paths:
+      - "trailer/**"
+      - ".github/workflows/render-zyntrix-trailer.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: zyntrix-trailer-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: trailer/package.json
+      - name: Install dependencies
+        working-directory: trailer
+        run: npm install --no-audit --no-fund
+      - name: Render 45-second 1080p trailer
+        working-directory: trailer
+        run: npx remotion render src/index.ts Trailer out/zyntrix-os-trailer.mp4 --codec h264 --crf 18
+      - name: Upload finished MP4
+        uses: actions/upload-artifact@v4
+        with:
+          name: zyntrix-os-cinematic-trailer
+          path: trailer/out/zyntrix-os-trailer.mp4
+          if-no-files-found: error
+          retention-days: 14
