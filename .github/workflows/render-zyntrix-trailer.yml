@@ -11,7 +11,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: zyntrix-trailer-${{ github.ref }}
+  group: zyntrix-trailer-{{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -28,25 +28,26 @@ jobs:
       - name: Install dependencies
         working-directory: trailer
         run: npm install --no-audit --no-fund
-      - name: Install FFmpeg tools
+      - name: Install FFmpeg
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
-      - name: Render 45-second 1080p animation
+      - name: Render 45-second motion graphics
         working-directory: trailer
-        run: npx remotion render src/index.ts Trailer out/raw.mp4 --codec h264 --crf 18 --concurrency 4
-      - name: Compose generated soundtrack
+        run: npx remotion render src/index.ts Trailer out/zettings-film-v9-silent.mp4 --codec h264 --crf 17 --concurrency 4
+      - name: Mix the reference soundtrack
         working-directory: trailer
         run: |
-          python3 scripts/make_score.py
-          ffmpeg -y -hide_banner -loglevel error -i out/raw.mp4 -i out/score.wav -map 0:v:0 -map 1:a:0 -c:v copy -c:a aac -b:a 192k -shortest -movflags +faststart out/zyntrix-os-cinematic-trailer.mp4
-      - name: Verify duration and streams
+          curl -fsSL 'https://d2ol7oe51mr4n9.cloudfront.net/user_3K32CiOAcurw0eVrpkaRJB6SxXB/09c16e4d-178d-4c9d-a5dd-bc9f387f7be7.mp4' -o /tmp/zettings-reference.mp4
+          ffmpeg -y -hide_banner -loglevel error -i out/zettings-film-v9-silent.mp4 -i /tmp/zettings-reference.mp4 -filter_complex '[1:a]atempo=0.97777778,afade=t=in:st=0:d=1.0,afade=t=out:st=42:d=3.0[a]' -map 0:v:0 -map '[a]' -c:v copy -c:a aac -b:a 192k -t 45 -movflags +faststart out/zettings-film-v9-peak.mp4
+      - name: Verify export
         working-directory: trailer
-        run: ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate -of json out/zyntrix-os-cinematic-trailer.mp4
+        run: |
+          ffprobe -v error -show_entries format=duration,size -show_entries stream=codec_name,width,height,r_frame_rate -of json out/zettings-film-v9-peak.mp4
       - name: Upload finished MP4
         uses: actions/upload-artifact@v4
         with:
-          name: zyntrix-os-cinematic-trailer
-          path: trailer/out/zyntrix-os-cinematic-trailer.mp4
+          name: zettings-film-v9-peak
+          path: trailer/out/zettings-film-v9-peak.mp4
           if-no-files-found: error
           retention-days: 14
