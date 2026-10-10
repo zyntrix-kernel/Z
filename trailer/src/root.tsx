@@ -40,12 +40,6 @@ function Reveal({children, delay=0, y=16, duration=14, style={}}:{
 
 function Background({accent=C.purple}:{accent?:string}) {
   return <AbsoluteFill style={{background:C.bg, overflow:'hidden'}}>
-    <AbsoluteFill style={{
-      backgroundImage:'linear-gradient(rgba(255,255,255,.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.012) 1px,transparent 1px)',
-      backgroundSize:'80px 80px',
-      maskImage:'linear-gradient(to bottom,transparent 5%,black 18%,black 82%,transparent 95%)'
-    }}/>
-    <div style={{position:'absolute',left:'50%',top:590,width:890,height:360,transform:'translateX(-50%)',borderRadius:'50%',background:'radial-gradient(ellipse, '+accent+'14 0%, '+accent+'07 36%, transparent 70%)',filter:'blur(32px)'}}/>
     <div style={{position:'absolute',left:66,right:66,top:151,height:1,background:'#ffffff12'}}/>
     <div style={{position:'absolute',left:66,right:66,bottom:151,height:1,background:'#ffffff12'}}/>
   </AbsoluteFill>;
@@ -68,21 +62,18 @@ function SceneBase({index, accent=C.purple, children}:{
 }) {
   const f=useCurrentFrame();
   const {durationInFrames}=useVideoConfig();
-  const fadeIn=interpolate(f,[0,9],[0,1],CLAMP);
-  const fadeOut=interpolate(f,[durationInFrames-10,durationInFrames-1],[1,0],CLAMP);
+  const fadeIn=interpolate(f,[0,8],[0,1],CLAMP);
+  const fadeOut=interpolate(f,[durationInFrames-9,durationInFrames-1],[1,0],CLAMP);
   const opacity=Math.min(fadeIn,fadeOut);
-  const scale=interpolate(f,[0,durationInFrames-1],[1.018,1.0],CLAMP);
-  const footerProgress=interpolate(f,[7,32],[0,1],CLAMP);
+  const scale=interpolate(f,[0,durationInFrames-1],[1.012,1.0],CLAMP);
+  const chapter=index<=1?1:index<=4?2:index<=7?3:index<=11?4:index===12?5:6;
   return <AbsoluteFill style={{opacity,transform:'scale('+scale+')',transformOrigin:'center center',color:C.white,fontFamily:UI_FONT,background:C.bg}}>
     <Background accent={accent}/>
     <LightSweep accent={accent}/>
-    <div style={{position:'absolute',left:78,top:65,fontFamily:'ui-monospace,monospace',fontSize:12,letterSpacing:3,color:'#7e6bb1',fontWeight:600}}>{String(index).padStart(2,'0')} <span style={{color:'#37323f'}}>/ 12</span></div>
-    <div style={{position:'absolute',right:78,top:65,fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:3,color:'#55535d'}}>ZYNTRIX OS / ZETTINGS</div>
-    <div style={{position:'absolute',left:78,top:100,width:Math.max(0,footerProgress*118),height:2,background:accent,boxShadow:'0 0 12px '+accent+'80'}}/>
-    {children}
-    <div style={{position:'absolute',left:78,right:78,bottom:64,display:'flex',justifyContent:'space-between',alignItems:'center',fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:2,color:'#4f4d55'}}>
-      <span>SYSTEM SETTINGS, RECONSIDERED.</span><span style={{color:accent+'99'}}>Z / ZETTINGS</span>
+    <div style={{position:'absolute',left:62,top:14,fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:2,color:'#7e6bb1',fontWeight:600}}>
+      {String(chapter).padStart(2,'0')} <span style={{color:'#37323f'}}>/ 06</span>
     </div>
+    {children}
   </AbsoluteFill>;
 }
 
@@ -128,7 +119,7 @@ function Switch({on=true,color=C.blue}:{on?:boolean;color?:string}) {
   </div>;
 }
 
-function SettingRow({icon,title,detail,color=C.blue,on=true,tag}:{icon:string;title:string;detail:string;color?:string;on?:boolean;tag?:string}) {
+function SettingRow({icon,title,detail,color=C.blue,on=true,tag,battery}:{icon:string;title:string;detail:string;color?:string;on?:boolean;tag?:string;battery?:number}) {
   const f=useCurrentFrame();
   const breathe=.5+.5*Math.sin(f/8.5);
   const entering=interpolate(f,[3,22],[0,1],CLAMP);
@@ -145,12 +136,17 @@ function SettingRow({icon,title,detail,color=C.blue,on=true,tag}:{icon:string;ti
       <div style={{fontSize:22,fontWeight:650,letterSpacing:-.5,color:'#f4f4f8'}}>{title}</div>
       <div style={{fontFamily:'ui-monospace,monospace',fontSize:11,fontWeight:600,letterSpacing:2,color,marginTop:7}}>{detail}</div>
     </div>
-    {tag&&<div style={{fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:2,color:C.muted,marginRight:10}}>{tag}</div>}
-    <Switch on={on} color={color}/>
+    {battery!==undefined ? <div style={{width:92,display:'flex',flexDirection:'column',gap:9,alignItems:'flex-end',marginRight:3}}>
+      <span style={{fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:1,color:'#aaa9b3'}}>{battery}%</span>
+      <div style={{width:84,height:4,borderRadius:5,background:'#34343a',overflow:'hidden'}}><div style={{height:4,width:battery+'%',background:color,boxShadow:'0 0 14px '+color,borderRadius:5}}/></div>
+    </div> : <>
+      {tag&&<div style={{fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:2,color:C.muted,marginRight:10}}>{tag}</div>}
+      <Switch on={on} color={color}/>
+    </>}
   </div>;
 }
 
-function CenterRow({children,top=526}:{children:React.ReactNode;top?:number}) {
+function CenterRow({children,top=568}:{children:React.ReactNode;top?:number}) {
  return <div style={{position:'absolute',top,left:0,right:0,display:'flex',justifyContent:'center'}}><Reveal y={22}>{children}</Reveal></div>;
 }
 
@@ -176,33 +172,33 @@ function Slider({color=C.amber,value=82,label='BRIGHTNESS',icon='☼',leftLabel=
 function S1(){
  const f=useCurrentFrame();
  return <SceneBase index={1} accent={C.amber}>
-  <div style={{position:'absolute',left:0,right:0,top:288,textAlign:'center'}}>
+  <div style={{position:'absolute',left:0,right:0,top:355,textAlign:'center'}}>
    <Reveal><div style={{fontFamily:TITLE_FONT,fontSize:72,fontWeight:800,letterSpacing:1.5,color:C.white}}>EVERY SETTING.</div></Reveal>
-   <Reveal delay={6}><div style={{fontFamily:TITLE_FONT,fontSize:72,fontWeight:800,letterSpacing:1.4,color:C.purple,marginTop:10}}>ONE BEAUTIFUL HOME.</div></Reveal>
-   <Reveal delay={14}><div style={{fontFamily:'ui-monospace,monospace',fontSize:12,letterSpacing:5,color:'#81739f',marginTop:24}}>ZYNTRIX OS · SETTINGS REIMAGINED</div></Reveal>
+   <Reveal delay={6}><div style={{fontFamily:TITLE_FONT,fontSize:72,fontWeight:800,letterSpacing:1.4,color:C.purple,marginTop:35}}>ONE BEAUTIFUL HOME.</div></Reveal>
+   <Reveal delay={14}><div style={{fontFamily:'ui-monospace,monospace',fontSize:12,letterSpacing:5,color:'#81739f',marginTop:28}}>ZYNTRIX OS · SETTINGS REIMAGINED</div></Reveal>
   </div>
-  <div style={{position:'absolute',top:625,left:0,right:0,display:'flex',justifyContent:'center'}}><Reveal delay={15} y={12}><Slider color={C.amber} value={83} label="A LITTLE MORE YOU" icon="☼" width={530}/></Reveal></div>
-  <div style={{position:'absolute',left:'50%',top:610,width:560,height:160,transform:'translateX(-50%)',borderRadius:'50%',background:'radial-gradient(ellipse,#ffbd3114,transparent 70%)',filter:'blur(22px)'}}/>
+  <div style={{position:'absolute',top:657,left:0,right:0,display:'flex',justifyContent:'center'}}><Reveal delay={15} y={12}><Slider color={C.amber} value={83} label="A LITTLE MORE YOU" icon="☼" width={640}/></Reveal></div>
+  <div style={{position:'absolute',left:'50%',top:640,width:640,height:160,transform:'translateX(-50%)',borderRadius:'50%',background:'radial-gradient(ellipse,#ffbd3114,transparent 70%)',filter:'blur(22px)'}}/>
   <div style={{opacity:interpolate(f,[0,100],[.22,.55],CLAMP),position:'absolute',left:'50%',top:750,width:2,height:20,background:C.amber}}/>
  </SceneBase>;
 }
 
 function S2(){return <SceneBase index={2} accent={C.blue}>
- <Headline line1="INSTANTLY CONNECTED." accent={C.blue} eyebrow="WI-FI · ON ARRIVAL" top={322} size={61}/>
- <CenterRow><SettingRow icon="⌁" title="Wi-Fi" detail="ZYNTRIX-5G · SECURED" color={C.blue} tag="CONNECTED"/></CenterRow>
- <div style={{position:'absolute',top:690,left:0,right:0,textAlign:'center'}}><Reveal delay={25}><div style={{fontFamily:'ui-monospace,monospace',fontSize:11,letterSpacing:3,color:'#4e7181'}}>CONNECTED BEFORE YOU THINK ABOUT IT</div></Reveal></div>
+ <Headline line1="INSTANTLY CONNECTED." accent={C.blue} eyebrow="WI-FI · ON ARRIVAL" top={372} size={72}/>
+ <CenterRow top={565}><SettingRow icon="⌁" title="Wi-Fi" detail="CONNECTED · SECURED" color={C.blue}/></CenterRow>
+ 
  </SceneBase>}
 
 function S3(){return <SceneBase index={3} accent={C.green}>
- <Headline line1="ALREADY PAIRED." accent={C.green} eyebrow="BLUETOOTH · ZERO STEPS" top={323} size={64}/>
- <CenterRow><SettingRow icon="ᛒ" title="Zyntrix Keyboard" detail="PAIRED · INPUT READY" color={C.green} tag="CONNECTED"/></CenterRow>
- <div style={{position:'absolute',top:692,left:0,right:0,display:'flex',justifyContent:'center',gap:7,alignItems:'center'}}>{Array.from({length:17},(_,i)=><Reveal key={i} delay={i*1.5} y={5}><div style={{width:3,height:7+(i%4)*4,borderRadius:5,background:C.green,opacity:.38+(i%4)*.13}}/></Reveal>)}</div>
+ <Headline line1="ALREADY PAIRED." accent={C.green} eyebrow="BLUETOOTH · ZERO STEPS" top={372} size={74}/>
+ <CenterRow top={565}><SettingRow icon="ᛒ" title="Zyntrix Keyboard" detail="PAIRED · TYPING" color={C.green} battery={84}/></CenterRow>
  </SceneBase>}
 
 function S4(){return <SceneBase index={4} accent={C.purple}>
- <Headline line1="SILENCE, ON CUE." accent={C.purple} eyebrow="DO NOT DISTURB" top={326} size={64}/>
- <CenterRow><SettingRow icon="◐" title="Do not disturb" detail="FOCUS MODE · ACTIVE" color={C.purple} tag="ON"/></CenterRow>
- <div style={{position:'absolute',top:690,left:0,right:0,textAlign:'center'}}><Reveal delay={18}><div style={{fontFamily:TITLE_FONT,fontWeight:700,fontSize:18,letterSpacing:3,color:'#8b8893'}}>KEEP THE IMPORTANT THINGS LOUD.</div></Reveal></div>
+ <Headline line1="SILENCE, ON CUE." accent={C.purple} eyebrow="DO NOT DISTURB" top={372} size={74}/>
+ <div style={{position:'absolute',left:'50%',top:500,width:1010,height:224,transform:'translateX(-50%)',border:'1px solid #a47aff66',borderRadius:28,background:'linear-gradient(135deg,#a47aff04,#ffffff01)',boxShadow:'0 0 35px #a47aff0c',display:'flex',alignItems:'center',justifyContent:'center'}}>
+  <Reveal delay={8}><SettingRow icon="◐" title="Do not disturb" detail="Calls and alerts stay quiet" color={C.purple}/></Reveal>
+ </div>
  </SceneBase>}
 
 function QuickTile({icon,title,detail,color,delay}:{icon:string;title:string;detail:string;color:string;delay:number}){
@@ -212,8 +208,8 @@ function QuickTile({icon,title,detail,color,delay}:{icon:string;title:string;det
  </div>;
 }
 function S5(){return <SceneBase index={5} accent={C.purple}>
- <Headline line1="ONE TAP AWAY." accent={C.purple} eyebrow="QUICK SETTINGS" top={236} size={65}/>
- <div style={{position:'absolute',top:430,left:0,right:0,display:'flex',justifyContent:'center',gap:16,flexWrap:'wrap',padding:'0 250px',boxSizing:'border-box'}}>
+ <Headline line1="ONE TAP AWAY." accent={C.purple} eyebrow="QUICK SETTINGS" top={352} size={76}/>
+ <div style={{position:'absolute',top:520,left:0,right:0,display:'flex',justifyContent:'center',gap:16,flexWrap:'wrap',padding:'0 250px',boxSizing:'border-box'}}>
   <QuickTile icon="⌁" title="Wi-Fi" detail="CONNECTED" color={C.blue} delay={4}/>
   <QuickTile icon="ᛒ" title="Bluetooth" detail="PAIRED" color={C.green} delay={8}/>
   <QuickTile icon="◐" title="Do not disturb" detail="ON" color={C.purple} delay={12}/>
@@ -223,9 +219,9 @@ function S5(){return <SceneBase index={5} accent={C.purple}>
 
 function S6(){const labels=[['◈','System'],['⌁','Network'],['ᛒ','Bluetooth & devices'],['▤','Personalization'],['◉','Accessibility'],['●','Accounts'],['⌑','Privacy & security'],['▣','Applications'],['↻','Updates'],['⌘','Developer']];
  return <SceneBase index={6} accent={C.purple}>
- <Headline line1="TEN CATEGORIES." accent={C.purple} eyebrow="ONE SEARCHABLE HOME" top={245} size={64}/>
- <div style={{position:'absolute',top:428,left:170,right:170,display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:13}}>
- {labels.map(([icon,label],i)=><Reveal key={label} delay={i*2.2} y={12}><div style={{height:67,borderRadius:12,border:'1px solid #28282d',background:'#101113',display:'flex',alignItems:'center',gap:12,padding:'0 17px',boxSizing:'border-box',boxShadow:'inset 0 1px #ffffff05'}}><div style={{width:27,height:27,borderRadius:7,background:'#a47aff19',display:'grid',placeItems:'center',color:C.purple,fontSize:14}}>{icon}</div><div style={{fontSize:13,color:'#d7d5dd',fontWeight:600,whiteSpace:'nowrap'}}>{label}</div></div></Reveal>)}
+ <Headline line1="TEN CATEGORIES." accent={C.purple} eyebrow="ONE SEARCHABLE HOME" top={318} size={76}/>
+ <div style={{position:'absolute',top:515,left:210,right:210,display:'grid',gridTemplateColumns:'repeat(5,1fr)',gap:12}}>
+ {labels.map(([icon,label],i)=><Reveal key={label} delay={i*2.2} y={12}><div style={{height:116,borderRadius:14,border:'1px solid #28282d',background:'#101113',display:'flex',alignItems:'center',gap:12,padding:'0 17px',boxSizing:'border-box',boxShadow:'inset 0 1px #ffffff05'}}><div style={{width:33,height:33,borderRadius:8,background:'#a47aff19',display:'grid',placeItems:'center',color:C.purple,fontSize:17}}>{icon}</div><div style={{fontSize:16,color:'#d7d5dd',fontWeight:600,whiteSpace:'nowrap'}}>{label}</div></div></Reveal>)}
  </div>
  </SceneBase>}
 
@@ -233,66 +229,123 @@ function S7(){const f=useCurrentFrame();const w=interpolate(f,[12,42],[0,100],CL
  const words=['','n','ni','nig','nigh','night'];const typed=words[Math.min(words.length-1,Math.floor(Math.max(0,f-5)/3))];
  const match=interpolate(f,[18,33],[0,1],CLAMP);
  return <SceneBase index={7} accent={C.amber}>
- <Headline line1="FIND IT INSTANTLY." accent={C.amber} eyebrow="TYPE · MATCH · GO" top={260} size={65}/>
- <div style={{position:'absolute',left:0,right:0,top:452,display:'flex',justifyContent:'center'}}><Reveal y={18}><div style={{width:660,height:55,border:'1px solid #3a3730',borderRadius:13,background:'#101113',display:'flex',alignItems:'center',padding:'0 19px',boxSizing:'border-box',gap:13,boxShadow:'0 0 25px #ffbd310a'}}><Glyph color={C.amber} size={19}>⌕</Glyph><span style={{fontSize:17,color:C.white,letterSpacing:.1,minWidth:70,textAlign:'left'}}>{typed}</span><span style={{width:2,height:20,background:C.amber,opacity:Math.sin(f/3)>0?1:0}}/><span style={{marginLeft:'auto',fontFamily:'ui-monospace,monospace',fontSize:9,letterSpacing:2,color:'#6c675d'}}>SEARCH SETTINGS</span></div></Reveal></div>
- <div style={{position:'absolute',top:523,left:0,right:0,display:'flex',justifyContent:'center',opacity:match}}><Reveal delay={7} y={14}><div style={{width:660,height:84,border:'1px solid #ffbd315d',borderRadius:14,background:'#101113',boxSizing:'border-box',padding:'0 23px',display:'flex',alignItems:'center',gap:17,boxShadow:'0 0 38px #ffbd3114'}}><Glyph color={C.amber} size={20}>☾</Glyph><div style={{flex:1,textAlign:'left'}}><div style={{fontSize:16,fontWeight:650}}>Night light</div><div style={{fontSize:11,color:C.muted,marginTop:6}}>Warmer display after dark</div></div><span style={{fontFamily:'ui-monospace,monospace',fontSize:10,color:C.amber,letterSpacing:2}}>MATCH FOUND</span><div style={{width:26,height:26,borderRadius:20,background:C.amber,color:'#1b1404',display:'grid',placeItems:'center',fontSize:17}}>✓</div></div></Reveal></div>
- <div style={{position:'absolute',top:636,left:'50%',width:660,height:2,background:'#ffbd3129',transform:'translateX(-50%)'}}><div style={{height:2,width:w+'%',background:C.amber,boxShadow:'0 0 9px '+C.amber}}/></div>
+ <Headline line1="FIND IT INSTANTLY." accent={C.amber} eyebrow="TYPE · MATCH · GO" top={352} size={76}/>
+ <div style={{position:'absolute',left:0,right:0,top:545,display:'flex',justifyContent:'center'}}><Reveal y={18}><div style={{width:760,height:64,border:'1px solid #3a3730',borderRadius:13,background:'#101113',display:'flex',alignItems:'center',padding:'0 19px',boxSizing:'border-box',gap:13,boxShadow:'0 0 25px #ffbd310a'}}><svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke={C.amber} strokeWidth="1.7" strokeLinecap="round"><circle cx="10.5" cy="10.5" r="6"/><path d="m15 15 5 5"/></svg><span style={{fontSize:17,color:C.white,letterSpacing:.1,minWidth:70,textAlign:'left'}}>{typed}</span><span style={{width:2,height:20,background:C.amber,opacity:Math.sin(f/3)>0?1:0}}/><span style={{marginLeft:'auto',fontFamily:'ui-monospace,monospace',fontSize:9,letterSpacing:2,color:'#6c675d'}}>SEARCH SETTINGS</span></div></Reveal></div>
+ <div style={{position:'absolute',top:627,left:0,right:0,display:'flex',justifyContent:'center',opacity:match}}><Reveal delay={7} y={14}><div style={{width:760,height:100,border:'1px solid #ffbd315d',borderRadius:14,background:'#101113',boxSizing:'border-box',padding:'0 23px',display:'flex',alignItems:'center',gap:17,boxShadow:'0 0 38px #ffbd3114'}}><Glyph color={C.amber} size={20}>☾</Glyph><div style={{flex:1,textAlign:'left'}}><div style={{fontSize:16,fontWeight:650}}>Night light</div><div style={{fontSize:11,color:C.muted,marginTop:6}}>Warmer display after dark</div></div><span style={{fontFamily:'ui-monospace,monospace',fontSize:10,color:C.amber,letterSpacing:2}}>MATCH FOUND</span><div style={{width:26,height:26,borderRadius:20,background:C.amber,color:'#1b1404',display:'grid',placeItems:'center',fontSize:17}}>✓</div></div></Reveal></div>
+ <div style={{position:'absolute',top:744,left:'50%',width:760,height:2,background:'#ffbd3129',transform:'translateX(-50%)'}}><div style={{height:2,width:w+'%',background:C.amber,boxShadow:'0 0 9px '+C.amber}}/></div>
  </SceneBase>}
 
 function S8(){return <SceneBase index={8} accent={C.amber}>
- <Headline line1="EVERY LEVEL OF LIGHT." accent={C.amber} eyebrow="BRIGHTNESS · YOUR TERMS" top={296} size={60}/>
- <div style={{position:'absolute',top:535,left:0,right:0}}><Reveal delay={7} y={12}><Slider color={C.purple} value={91} label="DISPLAY BRIGHTNESS" icon="☼" width={725}/></Reveal></div>
- <div style={{position:'absolute',top:682,left:0,right:0,textAlign:'center'}}><Reveal delay={20}><div style={{fontFamily:'ui-monospace,monospace',fontSize:10,color:'#6a596e',letterSpacing:3}}>PRECISE CONTROL · ZERO FRICTION</div></Reveal></div>
+ <Headline line1="EVERY LEVEL OF LIGHT." accent={C.amber} eyebrow="BRIGHTNESS · 100 STEPS" top={372} size={72}/>
+ <div style={{position:'absolute',top:610,left:0,right:0}}><Reveal delay={7} y={12}><Slider color={C.purple} value={91} label="DISPLAY BRIGHTNESS" icon="☼" width={660}/></Reveal></div>
+ <div style={{position:'absolute',top:716,left:0,right:0,textAlign:'center'}}><Reveal delay={20}><div style={{fontFamily:'ui-monospace,monospace',fontSize:10,color:'#6a596e',letterSpacing:3}}>PRECISE CONTROL · ZERO FRICTION</div></Reveal></div>
  </SceneBase>}
 
 function S9(){const f=useCurrentFrame();const selected=Math.min(2,Math.floor(Math.max(0,f-18)/17));
  const options=[['LIGHT','#e7e7e9'],['DARK','#5a5862'],['OLED','#060608']];
  return <SceneBase index={9} accent={C.purple}>
- <Headline line1="THREE MOODS." accent={C.purple} eyebrow="LIGHT · DARK · OLED" top={235} size={66}/>
- <div style={{position:'absolute',top:418,left:0,right:0,display:'flex',justifyContent:'center'}}><Reveal delay={7} y={13}><div style={{width:630,height:220,border:'1px solid #28282d',borderRadius:15,background:'#101113',padding:18,boxSizing:'border-box',boxShadow:'0 0 40px #a47aff0a'}}>
+ <Headline line1="THREE MOODS." accent={C.purple} eyebrow="LIGHT · DARK · OLED" top={305} size={76}/>
+ <div style={{position:'absolute',top:478,left:0,right:0,display:'flex',justifyContent:'center'}}><Reveal delay={7} y={13}><div style={{width:660,height:220,border:'1px solid #28282d',borderRadius:15,background:'#101113',padding:18,boxSizing:'border-box',boxShadow:'0 0 40px #a47aff0a'}}>
   <div style={{display:'flex',justifyContent:'space-between',marginBottom:17}}>{['—','—','—'].map((x,i)=><div key={i} style={{height:5,width:65,borderRadius:4,background:i===selected?C.purple:'#34323a'}}/>)}</div>
   <div style={{display:'flex',gap:12,height:130}}>{['#eeeef0','#25242a','#030304'].map((bg,i)=><div key={bg} style={{flex:1,borderRadius:9,background:bg,border:'1px solid '+(i===selected?C.purple:'#36343c'),boxShadow:i===selected?'0 0 20px #a47aff20':'none',padding:12,boxSizing:'border-box'}}><div style={{height:6,width:'65%',borderRadius:4,background:i===0?'#b8b8bf':i===1?'#777480':'#33313a'}}/><div style={{height:6,width:'42%',borderRadius:4,background:i===0?'#c9c9ce':i===1?'#56535f':'#242228',marginTop:10}}/><div style={{height:24,width:'100%',borderRadius:5,background:i===0?'#dbdbe0':i===1?'#38363f':'#121114',marginTop:18}}/></div>)}</div>
  </div></Reveal></div>
- <div style={{position:'absolute',top:676,left:0,right:0,display:'flex',justifyContent:'center',gap:9}}>{options.map(([name,bg],i)=><div key={name} style={{width:104,height:35,borderRadius:19,border:'1px solid '+(selected===i?C.purple:'#35333a'),background:selected===i?'#a47aff20':'#0c0c0e',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,letterSpacing:2,color:selected===i?C.purple:C.muted}}>{name}</div>)}</div>
+ <div style={{position:'absolute',top:720,left:0,right:0,display:'flex',justifyContent:'center',gap:9}}>{options.map(([name,bg],i)=><div key={name} style={{width:104,height:35,borderRadius:19,border:'1px solid '+(selected===i?C.purple:'#35333a'),background:selected===i?'#a47aff20':'#0c0c0e',display:'flex',alignItems:'center',justifyContent:'center',fontSize:10,letterSpacing:2,color:selected===i?C.purple:C.muted}}>{name}</div>)}</div>
  </SceneBase>}
 
 function S10(){const f=useCurrentFrame();const swatches=[C.blue,C.purple,C.green,C.coral,C.amber,'#e2e3e7','#00d7c1','#fa65b4'];
  const chosen=f<21?0:f<35?1:3;
  return <SceneBase index={10} accent={C.coral}>
- <Headline line1="MAKE IT YOURS." accent={C.purple} eyebrow="7 ACCENT SEEDS · ONE TAP" top={285} size={65}/>
- <div style={{position:'absolute',top:482,left:0,right:0,display:'flex',justifyContent:'center',alignItems:'center',gap:20}}>{swatches.map((color,i)=><Reveal key={color} delay={i*2} y={12}><div style={{width:31,height:31,borderRadius:30,background:color,border:i===chosen?'3px solid #fff':'2px solid #242329',boxSizing:'border-box',boxShadow:i===chosen?'0 0 25px '+color+'90,0 0 50px '+color+'30':'0 2px 6px #000',transform:i===chosen?'scale(1.16)':'scale(1)'}}/></Reveal>)}</div>
- <Reveal delay={22} y={9}><div style={{position:'absolute',top:560,left:'50%',transform:'translateX(-50%)',height:42,padding:'0 27px',border:'1px solid #ff654f7a',borderRadius:24,background:'#ff654f16',display:'flex',alignItems:'center',fontSize:11,fontWeight:700,letterSpacing:3,color:C.coral,boxShadow:'0 0 28px #ff654f12',whiteSpace:'nowrap'}}>SUNSET CORAL</div></Reveal>
+ <Headline line1="MAKE IT YOURS." accent={C.purple} eyebrow="7 ACCENT SEEDS · ONE TAP" top={355} size={76}/>
+ <div style={{position:'absolute',top:565,left:0,right:0,display:'flex',justifyContent:'center',alignItems:'center',gap:20}}>{swatches.map((color,i)=><Reveal key={color} delay={i*2} y={12}><div style={{width:31,height:31,borderRadius:30,background:color,border:i===chosen?'3px solid #fff':'2px solid #242329',boxSizing:'border-box',boxShadow:i===chosen?'0 0 25px '+color+'90,0 0 50px '+color+'30':'0 2px 6px #000',transform:i===chosen?'scale(1.16)':'scale(1)'}}/></Reveal>)}</div>
+ <Reveal delay={22} y={9}><div style={{position:'absolute',top:650,left:'50%',transform:'translateX(-50%)',height:42,padding:'0 27px',border:'1px solid #ff654f7a',borderRadius:24,background:'#ff654f16',display:'flex',alignItems:'center',fontSize:11,fontWeight:700,letterSpacing:3,color:C.coral,boxShadow:'0 0 28px #ff654f12',whiteSpace:'nowrap'}}>SUNSET CORAL</div></Reveal>
  <div style={{position:'absolute',top:657,left:0,right:0,textAlign:'center'}}><Reveal delay={27}><div style={{fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:3,color:'#75606a'}}>YOUR PALETTE. YOUR SYSTEM.</div></Reveal></div>
  </SceneBase>}
 
 function S11(){return <SceneBase index={11} accent={C.amber}>
- <Headline line1="NIGHT LIGHT, ON." accent={C.amber} eyebrow="SUNSET → SUNRISE" top={318} size={64}/>
- <CenterRow><SettingRow icon="☾" title="Night light" detail="WARMER DISPLAY AFTER DARK" color={C.amber} tag="ENABLED"/></CenterRow>
- <div style={{position:'absolute',top:695,left:0,right:0,textAlign:'center'}}><Reveal delay={19}><div style={{fontFamily:TITLE_FONT,fontSize:19,letterSpacing:3,fontWeight:700,color:'#bab6be'}}>EASIER ON THE EYES. BUILT INTO YOUR FLOW.</div></Reveal></div>
+ <Headline line1="NIGHT LIGHT, ON." accent={C.amber} eyebrow="SUNSET → SUNRISE" top={370} size={74}/>
+ <CenterRow top={565}><SettingRow icon="☾" title="Night light" detail="Warmer display after dark" color={C.amber} on={true}/></CenterRow>
+ <div style={{position:'absolute',top:710,left:0,right:0,textAlign:'center'}}><Reveal delay={19}><div style={{fontFamily:TITLE_FONT,fontSize:19,letterSpacing:3,fontWeight:700,color:'#bab6be'}}>EASIER ON THE EYES. BUILT INTO YOUR FLOW.</div></Reveal></div>
  </SceneBase>}
 
-function S12(){const f=useCurrentFrame(),{fps}=useVideoConfig();const p=spring({frame:f-6,fps,config:{damping:15,stiffness:80}});const pulse=.25+.15*(Math.sin(f/11)+1);
+function S12(){
+ const f=useCurrentFrame();
+ const {fps}=useVideoConfig();
+ const switchSpring=spring({frame:f-22,fps,config:{damping:8,stiffness:118,mass:.78}});
+ const sliderSpring=spring({frame:f-48,fps,config:{damping:11,stiffness:90,mass:.8}});
+ const knobX=interpolate(switchSpring,[0,1],[8,98]);
+ const slideX=interpolate(sliderSpring,[0,1],[12,648]);
+ const pulse=.5+.5*Math.sin(f/7.5);
+ const on=interpolate(f,[18,28],[0,1],CLAMP);
  return <SceneBase index={12} accent={C.purple}>
- <div style={{position:'absolute',left:0,right:0,top:284,textAlign:'center'}}>
-  <Reveal y={10} delay={3}><div style={{fontFamily:TITLE_FONT,fontSize:92,fontWeight:900,letterSpacing:5,color:C.white,textShadow:'0 0 45px #a47aff20'}}>ZETTINGS<span style={{color:C.purple}}>.</span></div></Reveal>
-  <Reveal y={10} delay={12}><div style={{fontFamily:'ui-monospace,monospace',fontSize:14,letterSpacing:5,color:C.purple,marginTop:25}}>SYSTEM SETTINGS, RECONSIDERED.</div></Reveal>
-  <Reveal y={8} delay={23}><div style={{fontSize:15,letterSpacing:1,color:'#88858f',marginTop:29}}>A Zyntrix OS experience.</div></Reveal>
- </div>
- <div style={{position:'absolute',left:'50%',top:590,transform:'translateX(-50%) scale('+(.96+.04*p)+')',filter:'drop-shadow(0 0 30px rgba(164,122,255,'+pulse+'))'}}>
-  <svg width="84" height="84" viewBox="0 0 84 84" fill="none"><circle cx="42" cy="42" r="34" stroke={C.purple} strokeOpacity=".32"/><path d="M23 27H61L25 57H61" stroke={C.purple} strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/><circle cx="61" cy="27" r="2.5" fill="white"/><circle cx="25" cy="57" r="2.5" fill="white"/></svg>
- </div>
- <div style={{position:'absolute',top:720,left:0,right:0,textAlign:'center'}}><Reveal delay={29}><div style={{fontFamily:'ui-monospace,monospace',fontSize:10,color:'#5f596a',letterSpacing:4}}>MADE FOR THE WAY YOU WORK.</div></Reveal></div>
- </SceneBase>}
+   <div style={{position:'absolute',left:0,right:0,top:355,textAlign:'center'}}>
+     <Reveal y={14}><div style={{fontFamily:TITLE_FONT,fontSize:82,fontWeight:850,letterSpacing:1.4,lineHeight:1.05,color:C.white}}>BUTTERY SMOOTH.</div></Reveal>
+     <Reveal delay={8} y={8}><div style={{fontFamily:'ui-monospace,monospace',fontSize:13,fontWeight:700,letterSpacing:4,color:C.purple,marginTop:21}}>SPRING PHYSICS · EVERY TOUCH</div></Reveal>
+   </div>
+   <div style={{position:'absolute',left:'50%',top:500,width:445,height:226,transform:'translateX(-50%)',border:'1.5px solid #a47aff88',borderRadius:128,background:'linear-gradient(110deg,#a47aff04,#a47aff0b,#ffffff01)',boxShadow:'0 0 '+(18+pulse*24)+'px #a47aff'+Math.round(15+pulse*18).toString(16).padStart(2,'0'),display:'flex',alignItems:'center',justifyContent:'center'}}>
+     <div style={{width:184,height:88,borderRadius:48,background:'rgba(164,122,255,'+(.25+.75*on)+')',boxShadow:'0 0 '+(20+pulse*25)+'px rgba(164,122,255,'+(.15+.55*on)+')',position:'relative',overflow:'hidden',border:'1px solid '+(on?'#cdb8ff':'#49404f')}}>
+       <div style={{position:'absolute',left:knobX,top:9,width:68,height:68,borderRadius:50,background:'linear-gradient(145deg,#ffffff,#e2d7ff)',boxShadow:'0 0 18px #fff9,0 3px 9px #0007'}}/>
+     </div>
+   </div>
+   <div style={{position:'absolute',left:'50%',top:750,width:660,transform:'translateX(-50%)'}}>
+     <div style={{height:3,background:'#2c2b30',position:'relative',borderRadius:3}}>
+       <div style={{height:3,width:slideX+'px',background:'linear-gradient(90deg,#7060b0,#bca0ff)',boxShadow:'0 0 17px #a47aff80',borderRadius:3}}/>
+       <div style={{position:'absolute',left:slideX,top:'50%',width:23,height:23,borderRadius:50,background:'#fff',transform:'translate(-50%,-50%)',boxShadow:'0 0 22px #a47aff,0 0 4px #fff'}}/>
+     </div>
+   </div>
+   <div style={{position:'absolute',left:0,right:0,top:801,textAlign:'center',fontFamily:'ui-monospace,monospace',fontSize:10,letterSpacing:4,color:'#625876'}}>RESPONSIVE BY DESIGN</div>
+ </SceneBase>;
+}
 
-const SCENES=[S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12];
-const DURATIONS=[121,121,121,121,122,122,122,122,122,122,122,122];
+function S13(){
+ const f=useCurrentFrame();
+ const {fps}=useVideoConfig();
+ const draw=spring({frame:f-8,fps,config:{damping:22,stiffness:78,mass:.9}});
+ const outline=interpolate(f,[2,48],[820,0],CLAMP);
+ const fill=interpolate(f,[38,66],[0,1],CLAMP);
+ const word=interpolate(f,[76,105],[0,1],CLAMP);
+ const tagline=interpolate(f,[118,142],[0,1],CLAMP);
+ const cx=960,cy=452;
+ const span=interpolate(f,[0,52],[980,225],CLAMP);
+ const rayColors=[C.purple,C.blue,C.green,C.amber,'#ff4f9a'];
+ const rays=Array.from({length:42},(_,i)=>{
+   const angle=(i*2.3999632297);
+   const offset=((i*67)%210)-105;
+   const reach=span*(.64+((i*13)%37)/100);
+   return {i,x1:cx-Math.cos(angle)*reach-Math.sin(angle)*offset,y1:cy-Math.sin(angle)*reach+Math.cos(angle)*offset,x2:cx+Math.cos(angle)*reach-Math.sin(angle)*offset,y2:cy+Math.sin(angle)*reach+Math.cos(angle)*offset,color:rayColors[i%rayColors.length],opacity:interpolate(f,[0,45,95],[.04,.42,.06],CLAMP)*(i%4===0?1:.65)};
+ });
+ const dots=[C.blue,C.amber,C.purple,'#ff3a9c',C.green,'#ff654f'];
+ const orbit=dots.map((color,i)=>({color,x:120+109*Math.cos(f*.028+i*Math.PI*2/dots.length),y:120+109*Math.sin(f*.028+i*Math.PI*2/dots.length)}));
+ return <SceneBase index={13} accent={C.purple}>
+   <AbsoluteFill style={{pointerEvents:'none'}}>
+     <div style={{position:'absolute',left:'50%',top:452,width:640,height:600,transform:'translate(-50%,-50%)',borderRadius:'50%',background:'radial-gradient(ellipse,#a47aff28 0%,#6c43be12 30%,transparent 70%)',filter:'blur(20px)',opacity:interpolate(f,[0,24],[.2,1],CLAMP)}}/>
+     <svg width="1920" height="1080" viewBox="0 0 1920 1080" style={{position:'absolute',inset:0}}>
+       {rays.map(r=><line key={r.i} x1={r.x1} y1={r.y1} x2={r.x2} y2={r.y2} stroke={r.color} strokeWidth={r.i%5===0?1.4:.75} opacity={r.opacity}/>)}
+       <circle cx={cx} cy={cy} r={220} stroke="#8667c9" strokeWidth="1.2" strokeOpacity={.22+fill*.2} fill="none"/>
+     </svg>
+   </AbsoluteFill>
+   <div style={{position:'absolute',left:720,top:212,width:480,height:480,filter:'drop-shadow(0 0 12px #ac8aff77) drop-shadow(0 0 '+(16+draw*24)+'px #8d63ff88)'}}>
+     <svg width="480" height="480" viewBox="0 0 240 240" fill="none">
+       <defs><linearGradient id="zettings-z-fill" x1="120" y1="20" x2="120" y2="220" gradientUnits="userSpaceOnUse"><stop stopColor="#f1eaff"/><stop offset=".46" stopColor="#c7adff"/><stop offset="1" stopColor="#8155e8"/></linearGradient></defs>
+       <path d="M38 26H202V62L72 178H202V214H38V178L168 62H38Z" stroke="#a47aff" strokeWidth="1.4" strokeDasharray="820" strokeDashoffset={outline} opacity={1-fill*.8}/>
+       <path d="M38 26H202V62L72 178H202V214H38V178L168 62H38Z" fill="url(#zettings-z-fill)" opacity={fill}/>
+       <circle cx="120" cy="120" r="109" stroke="#a47aff" strokeOpacity=".32" strokeWidth=".8"/>
+       {orbit.map((d,i)=><circle key={i} cx={d.x} cy={d.y} r={i===1||i===5?3:2.5} fill={d.color} opacity={interpolate(f,[15,44],[0,1],CLAMP)}/>)}
+     </svg>
+   </div>
+   <div style={{position:'absolute',left:0,right:0,top:694,textAlign:'center',fontFamily:TITLE_FONT,fontSize:70,fontWeight:850,letterSpacing:2.5,color:C.white,opacity:word,transform:'translateY('+interpolate(word,[0,1],[16,0])+'px)',textShadow:'0 0 24px #ffffff12'}}>ZETTINGS</div>
+   <div style={{position:'absolute',left:0,right:0,top:833,textAlign:'center',fontFamily:'ui-monospace,monospace',fontSize:12,fontWeight:600,letterSpacing:5,color:C.purple,opacity:tagline}}>FEEL EVERY SETTING.</div>
+ </SceneBase>;
+}
+
+const SCENES=[S1,S2,S3,S4,S5,S6,S7,S8,S9,S10,S11,S12,S13];
+const DURATIONS=[130,82,82,82,82,92,92,82,82,82,82,170,210];
 const SceneAt:React.FC<{index:number}>=({index})=>{const Component=SCENES[index];return <Component/>};
 
 export const Trailer:React.FC=()=>{
  let start=0;
  const seq=SCENES.map((_,i)=>{
    const item={index:i,from:start,duration:DURATIONS[i]};
-   start+=DURATIONS[i]-10;
+   start+=DURATIONS[i];
    return item;
  });
  return <AbsoluteFill style={{background:C.bg,fontFamily:UI_FONT}}>
